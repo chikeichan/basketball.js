@@ -1,0 +1,12 @@
+body {
+	background-color: rgb(40, 40, 40);;
+}
+
+canvas#court {
+	background-color: #E6BD87;
+	display: block;
+	margin: 0 auto 0 auto;
+	position: absolute;
+	right: 0;
+	left: 0;
+}
