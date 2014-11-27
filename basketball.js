@@ -140,7 +140,8 @@ bb.drawCourt = function(c,ctx){
 //Speed is feet per 30 milliseconds
 bb.player = {
 	name: 'Jacky',
-	speed: 0.75
+	speed: 0.75,
+	shootingSpeed: 0.6
 }
 
 bb.drawBall = function(canvas,context,x,y){
@@ -158,7 +159,14 @@ bb.drawPlayer = function(canvas,context,x,y){
 	context.beginPath();
 	context.arc(x*bb.ratio,y*bb.ratio,1*bb.ratio,0,2*Math.PI);
 	context.fill();
-	
+
+	if(bb.possession === 'player' || bb.possession === 'inPos'){
+		context.beginPath();
+		context.fillStyle = 'rgb(184, 82, 48)'
+		context.arc(x*bb.ratio-0.5*bb.ratio,y*bb.ratio-0.5*bb.ratio,bb.court.ballRadius,0,2*Math.PI);
+		context.fill();
+	}
+
 	context.translate(-(canvas.width-bb.court.width)/2,-(canvas.height-bb.court.height)/2);
 }
 
@@ -172,22 +180,41 @@ bb.ballPos = {
 	y: 25
 }
 
+bb.hoopPos = {
+	x: 5,
+	y: 25
+}
+
 bb.possession = null;
 
 bb.getBall = function(){
 	var dX = bb.ballPos.x - bb.playerPos.x;
 	var dY = bb.ballPos.y - bb.playerPos.y;
+	dXdY = Math.abs(dX/dY);
+  dYdX = Math.abs(dY/dX);
+
+  if(dXdY === Infinity){
+  	dXdY = 1;
+  } else if(dYdX === Infinity){
+  	dYdX = 1;
+  }
+
+  if(dX > dY) {
+  	dXdY = 1;
+  } else if (dY > dX){
+  	dYdX = 1;
+  }
 
 	if(dX < 0){
-		bb.playerPos.x = bb.playerPos.x - bb.player.speed;
+		bb.playerPos.x = bb.playerPos.x - bb.player.speed*dXdY;
 	} else if (dX > 0){
-		bb.playerPos.x = bb.playerPos.x + bb.player.speed;
+		bb.playerPos.x = bb.playerPos.x + bb.player.speed*dXdY;
 	}
 
 	if(dY < 0){
-		bb.playerPos.y = bb.playerPos.y - bb.player.speed;
+		bb.playerPos.y = bb.playerPos.y - bb.player.speed*dYdX;
 	} else if (dY > 0){
-		bb.playerPos.y = bb.playerPos.y + bb.player.speed;
+		bb.playerPos.y = bb.playerPos.y + bb.player.speed*dYdX;
 	}
 
 	if(dX < bb.player.speed && dX > -bb.player.speed){
@@ -199,21 +226,124 @@ bb.getBall = function(){
 	}
 
 	if(dX === 0 && dY === 0){
-		bb.possession = 'player'
+		bb.possession = 'player';
 	}
 
-	console.log(bb.playerPos)
+}
+
+bb.getTarget = function(){
+	var tX = Math.floor((Math.random()*25)+4);
+	var tY = Math.floor((Math.random()*50));
+
+	return {x: tX, y: tY};
+}
+
+
+bb.offensive = function(tX,tY){
+	var dX = tX - bb.playerPos.x;
+	var dY = tY - bb.playerPos.y;
+	dXdY = Math.abs(dX/dY);
+  dYdX = Math.abs(dY/dX);
+
+  if(dXdY === Infinity){
+  	dXdY = 1;
+  } else if(dYdX === Infinity){
+  	dYdX = 1;
+  }
+
+  if(dX > dY) {
+  	dXdY = 1;
+  } else if (dY > dX){
+  	dYdX = 1;
+  }
+
+	if(dX < 0){
+		bb.playerPos.x = bb.playerPos.x - bb.player.speed*dXdY;
+	} else if (dX > 0){
+		bb.playerPos.x = bb.playerPos.x + bb.player.speed*dXdY;
+	}
+
+	if(dY < 0){
+		bb.playerPos.y = bb.playerPos.y - bb.player.speed*dYdX;
+	} else if (dY > 0){
+		bb.playerPos.y = bb.playerPos.y + bb.player.speed*dYdX;
+	}
+
+	if(dX < bb.player.speed && dX > -bb.player.speed){
+		bb.playerPos.x = tX;
+	}
+
+	if(dY < bb.player.speed && dY > -bb.player.speed){
+		bb.playerPos.y = tY;
+	}
+
+	bb.ballPos = {
+		x: bb.playerPos.x,
+		y: bb.playerPos.y
+	}
+
+	if(dX === 0 && dY === 0){
+		bb.possession = 'inPos';
+	}
 
 }
 
 bb.render = function(c,ctx){
 	ctx.clearRect(0,0,c.width,c.height);
 	bb.drawCourt(c,ctx);
-	bb.drawBall(c,ctx,bb.ballPos.x,bb.ballPos.y);
+	if(bb.possession!=='player'){
+		bb.drawBall(c,ctx,bb.ballPos.x,bb.ballPos.y);
+	}
 	bb.drawPlayer(c,ctx,bb.playerPos.x,bb.playerPos.y);
 }
 
+bb.shoot = function(){
 
+	var dX = bb.hoopPos.x - bb.ballPos.x;
+	var dY = bb.hoopPos.y - bb.ballPos.y;
+  var dXdY;
+
+
+  dXdY = Math.abs(dX/dY);
+  dYdX = Math.abs(dY/dX);
+
+  if(dXdY === Infinity){
+  	dXdY = 1;
+  } else if(dYdX === Infinity){
+  	dYdX = 1;
+  }
+
+  if(dX > dY) {
+  	dXdY = 1;
+  } else if (dY > dX){
+  	dYdX = 1;
+  }
+
+	if(dX < 0){
+		bb.ballPos.x = bb.ballPos.x - bb.player.shootingSpeed*dXdY;
+	} else if (dX > 0){
+		bb.ballPos.x = bb.ballPos.x + bb.player.shootingSpeed*dXdY;
+	}
+
+	if(dY < 0){
+		bb.ballPos.y = bb.ballPos.y - bb.player.shootingSpeed*dYdX;
+	} else if (dY > 0){
+		bb.ballPos.y = bb.ballPos.y + bb.player.shootingSpeed*dYdX;
+	}
+
+	if(dX < bb.player.shootingSpeed && dX > -bb.player.shootingSpeed){
+		bb.ballPos.x = bb.hoopPos.x;
+	}
+
+	if(dY < bb.player.shootingSpeed  && dY > -bb.player.shootingSpeed){
+		bb.ballPos.y = bb.hoopPos.y;
+	}
+
+	if(dX === 0 && dY === 0){
+		bb.possession = null;
+	}
+	console.log(dXdY);
+}
 
 
 
@@ -226,13 +356,22 @@ $(document).ready(function(){
 	var ctx = c.getContext('2d');
 	bb.render(c,ctx);
 
-	var start = setInterval(function(){
-		if(!bb.possession){
+	var target = bb.getTarget();
+
+
+	var rendering = setInterval(function(){
+		if(bb.possession!=='player' && bb.possession !== 'inPos'&& bb.possession !=='shooting'){
 			bb.getBall();
-			bb.render(c,ctx);
-		} else {
-			clearInterval(start);
+			target = bb.getTarget();
+		} else if(bb.possession !== 'inPos' && bb.possession !=='shooting') {
+			bb.offensive(target.x,target.y);
+		} else if(bb.possession === 'inPos'){
+			bb.possession = 'shooting';
+		} else if(bb.possession === 'shooting'){
+			console.log(bb.ballPos);
+			bb.shoot();
 		}
+		bb.render(c,ctx);
 	},30)
 
 
