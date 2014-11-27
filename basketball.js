@@ -141,7 +141,8 @@ bb.drawCourt = function(c,ctx){
 bb.player = {
 	name: 'Jacky',
 	speed: 0.75,
-	shootingSpeed: 0.6
+	shootingSpeed: 0.6,
+	shootingPercent: 1
 }
 
 bb.drawBall = function(canvas,context,x,y){
@@ -186,12 +187,32 @@ bb.hoopPos = {
 }
 
 bb.possession = 'loose';
+bb.shootResult = 'missed';
 
-bb.getRandom = function(){
+bb.getRandom = function(mode){
 	var tX = Math.floor((Math.random()*25)+4);
 	var tY = Math.floor((Math.random()*50));
 
+	if(mode === 'missed'){
+		tX = Math.floor((Math.random()*2)+5);
+		tY = Math.floor((Math.random()*2)+24);
+	} else if(mode === 'rebound'){
+		tX = Math.floor((Math.random()*18)+5);
+		tY = Math.floor((Math.random()*16)+17);
+	}
+
 	return {x: tX, y: tY};
+}
+
+bb.getShooting = function(){
+	var result = Math.floor((Math.random()*100)+1);
+	if(result>bb.player.shootingPercent){
+		bb.shootResult = 'missed';
+		return bb.getRandom('missed');
+	} else {
+		bb.shootResult = 'scored';
+		return bb.hoopPos;
+	}
 }
 
 
@@ -225,7 +246,7 @@ bb.movePlayer = function(tX,tY){
 
 	
 
-	if(dX === 0 && dY === 0){
+	if(Math.abs(dX) < 1 && Math.abs(dY) < 1){
 		bb.ballPos = {
 			x: bb.playerPos.x,
 			y: bb.playerPos.y
@@ -235,15 +256,13 @@ bb.movePlayer = function(tX,tY){
 
 }
 
-bb.moveBall = function(x,y){
+bb.moveBall = function(x,y,speed){
 	var dX = x - bb.ballPos.x;
 	var dY = y - bb.ballPos.y;
 	var dC = Math.sqrt(dX*dX+dY*dY);
 
-	var dXdt = Math.abs(dX*(bb.player.shootingSpeed/dC));
-	var dYdt = Math.abs(dY*(bb.player.shootingSpeed/dC));
-
-	console.log(dXdt, dYdt)
+	var dXdt = Math.abs(dX*(speed/dC));
+	var dYdt = Math.abs(dY*(speed/dC));
 
 	if(dX < 0){
 		bb.ballPos.x = bb.ballPos.x - dXdt;
@@ -257,12 +276,12 @@ bb.moveBall = function(x,y){
 		bb.ballPos.y = bb.ballPos.y + dYdt;
 	}
 
-	if(dX < bb.player.shootingSpeed && dX > -bb.player.shootingSpeed){
-		bb.ballPos.x = bb.hoopPos.x;
+	if(dX < dXdt && dX > -dXdt){
+		bb.ballPos.x = x;
 	}
 
-	if(dY < bb.player.shootingSpeed  && dY > -bb.player.shootingSpeed){
-		bb.ballPos.y = bb.hoopPos.y;
+	if(dY < dYdt  && dY > -dYdt){
+		bb.ballPos.y = y;
 	}
 
 	if(dX === 0 && dY === 0){
@@ -273,10 +292,11 @@ bb.moveBall = function(x,y){
 bb.render = function(c,ctx){
 	ctx.clearRect(0,0,c.width,c.height);
 	bb.drawCourt(c,ctx);
+	
+	bb.drawPlayer(c,ctx,bb.playerPos.x,bb.playerPos.y);
 	if(bb.possession!=='player'){
 		bb.drawBall(c,ctx,bb.ballPos.x,bb.ballPos.y);
 	}
-	bb.drawPlayer(c,ctx,bb.playerPos.x,bb.playerPos.y);
 }
 
 
@@ -288,9 +308,10 @@ $(document).ready(function(){
 	var c = document.getElementById('court');
 	var ctx = c.getContext('2d');
 	var tar;
+	var shootTar;
 
 	var rendering = setInterval(function(){
-		if(bb.possession === 'loose'){
+		if(bb.possession === 'loose' || bb.possession === 'rebound'){
 			var t = bb.ballPos;
 			if(bb.movePlayer(t.x,t.y)){
 				bb.possession = 'player';
@@ -298,17 +319,31 @@ $(document).ready(function(){
 			}
 		} else if (bb.possession === 'player'){
 			if(bb.movePlayer(tar.x,tar.y)){
-				bb.possession = 'ready';
+				bb.possession = 'shoot';
+				shootTar = bb.getShooting();
 			}
-		} else if (bb.possession = 'ready') {
-			var t = bb.hoopPos;
-			if(bb.moveBall(t.x,t.y)){
+		}
+
+		if(bb.possession === 'shoot' && bb.shootResult === 'scored') {
+			if(bb.moveBall(shootTar.x,shootTar.y,bb.player.shootingSpeed)){
+				bb.possession = 'loose';
+			}
+		} else if(bb.possession === 'shoot' && bb.shootResult === 'missed') {
+			if(bb.moveBall(shootTar.x,shootTar.y,bb.player.shootingSpeed)){
+				bb.possession = 'rebound';
+				tar=bb.getRandom('rebound');
+			}
+		} else if(bb.possession === 'rebound'){
+			if(bb.moveBall(tar.x,tar.y,0.4)){
+				console.log('hi')
 				bb.possession = 'loose';
 			}
 		}
 		
 		bb.render(c,ctx);
 	},30)
+
+
 
 
 })
