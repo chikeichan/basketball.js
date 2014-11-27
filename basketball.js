@@ -185,53 +185,9 @@ bb.hoopPos = {
 	y: 25
 }
 
-bb.possession = null;
+bb.possession = 'loose';
 
-bb.getBall = function(){
-	var dX = bb.ballPos.x - bb.playerPos.x;
-	var dY = bb.ballPos.y - bb.playerPos.y;
-	dXdY = Math.abs(dX/dY);
-  dYdX = Math.abs(dY/dX);
-
-  if(dXdY === Infinity){
-  	dXdY = 1;
-  } else if(dYdX === Infinity){
-  	dYdX = 1;
-  }
-
-  if(dX > dY) {
-  	dXdY = 1;
-  } else if (dY > dX){
-  	dYdX = 1;
-  }
-
-	if(dX < 0){
-		bb.playerPos.x = bb.playerPos.x - bb.player.speed*dXdY;
-	} else if (dX > 0){
-		bb.playerPos.x = bb.playerPos.x + bb.player.speed*dXdY;
-	}
-
-	if(dY < 0){
-		bb.playerPos.y = bb.playerPos.y - bb.player.speed*dYdX;
-	} else if (dY > 0){
-		bb.playerPos.y = bb.playerPos.y + bb.player.speed*dYdX;
-	}
-
-	if(dX < bb.player.speed && dX > -bb.player.speed){
-		bb.playerPos.x = bb.ballPos.x;
-	}
-
-	if(dY < bb.player.speed && dY > -bb.player.speed){
-		bb.playerPos.y = bb.ballPos.y;
-	}
-
-	if(dX === 0 && dY === 0){
-		bb.possession = 'player';
-	}
-
-}
-
-bb.getTarget = function(){
+bb.getRandom = function(){
 	var tX = Math.floor((Math.random()*25)+4);
 	var tY = Math.floor((Math.random()*50));
 
@@ -239,34 +195,24 @@ bb.getTarget = function(){
 }
 
 
-bb.offensive = function(tX,tY){
+bb.movePlayer = function(tX,tY){
 	var dX = tX - bb.playerPos.x;
 	var dY = tY - bb.playerPos.y;
-	dXdY = Math.abs(dX/dY);
-  dYdX = Math.abs(dY/dX);
+	var dC = Math.sqrt(dX*dX+dY*dY);
 
-  if(dXdY === Infinity){
-  	dXdY = 1;
-  } else if(dYdX === Infinity){
-  	dYdX = 1;
-  }
-
-  if(dX > dY) {
-  	dXdY = 1;
-  } else if (dY > dX){
-  	dYdX = 1;
-  }
+	var dXdt = Math.abs(dX*(bb.player.speed/dC));
+	var dYdt = Math.abs(dY*(bb.player.speed/dC));
 
 	if(dX < 0){
-		bb.playerPos.x = bb.playerPos.x - bb.player.speed*dXdY;
+		bb.playerPos.x = bb.playerPos.x - dXdt;
 	} else if (dX > 0){
-		bb.playerPos.x = bb.playerPos.x + bb.player.speed*dXdY;
+		bb.playerPos.x = bb.playerPos.x + dXdt;
 	}
 
 	if(dY < 0){
-		bb.playerPos.y = bb.playerPos.y - bb.player.speed*dYdX;
+		bb.playerPos.y = bb.playerPos.y - dYdt;
 	} else if (dY > 0){
-		bb.playerPos.y = bb.playerPos.y + bb.player.speed*dYdX;
+		bb.playerPos.y = bb.playerPos.y + dYdt;
 	}
 
 	if(dX < bb.player.speed && dX > -bb.player.speed){
@@ -277,58 +223,38 @@ bb.offensive = function(tX,tY){
 		bb.playerPos.y = tY;
 	}
 
-	bb.ballPos = {
-		x: bb.playerPos.x,
-		y: bb.playerPos.y
-	}
+	
 
 	if(dX === 0 && dY === 0){
-		bb.possession = 'inPos';
+		bb.ballPos = {
+			x: bb.playerPos.x,
+			y: bb.playerPos.y
+		}
+		return true;
 	}
 
 }
 
-bb.render = function(c,ctx){
-	ctx.clearRect(0,0,c.width,c.height);
-	bb.drawCourt(c,ctx);
-	if(bb.possession!=='player'){
-		bb.drawBall(c,ctx,bb.ballPos.x,bb.ballPos.y);
-	}
-	bb.drawPlayer(c,ctx,bb.playerPos.x,bb.playerPos.y);
-}
+bb.moveBall = function(x,y){
+	var dX = x - bb.ballPos.x;
+	var dY = y - bb.ballPos.y;
+	var dC = Math.sqrt(dX*dX+dY*dY);
 
-bb.shoot = function(){
+	var dXdt = Math.abs(dX*(bb.player.shootingSpeed/dC));
+	var dYdt = Math.abs(dY*(bb.player.shootingSpeed/dC));
 
-	var dX = bb.hoopPos.x - bb.ballPos.x;
-	var dY = bb.hoopPos.y - bb.ballPos.y;
-  var dXdY;
-
-
-  dXdY = Math.abs(dX/dY);
-  dYdX = Math.abs(dY/dX);
-
-  if(dXdY === Infinity){
-  	dXdY = 1;
-  } else if(dYdX === Infinity){
-  	dYdX = 1;
-  }
-
-  if(dX > dY) {
-  	dXdY = 1;
-  } else if (dY > dX){
-  	dYdX = 1;
-  }
+	console.log(dXdt, dYdt)
 
 	if(dX < 0){
-		bb.ballPos.x = bb.ballPos.x - bb.player.shootingSpeed*dXdY;
+		bb.ballPos.x = bb.ballPos.x - dXdt;
 	} else if (dX > 0){
-		bb.ballPos.x = bb.ballPos.x + bb.player.shootingSpeed*dXdY;
+		bb.ballPos.x = bb.ballPos.x + dXdt;
 	}
 
 	if(dY < 0){
-		bb.ballPos.y = bb.ballPos.y - bb.player.shootingSpeed*dYdX;
+		bb.ballPos.y = bb.ballPos.y - dYdt;
 	} else if (dY > 0){
-		bb.ballPos.y = bb.ballPos.y + bb.player.shootingSpeed*dYdX;
+		bb.ballPos.y = bb.ballPos.y + dYdt;
 	}
 
 	if(dX < bb.player.shootingSpeed && dX > -bb.player.shootingSpeed){
@@ -340,11 +266,18 @@ bb.shoot = function(){
 	}
 
 	if(dX === 0 && dY === 0){
-		bb.possession = null;
+		return true;
 	}
-	console.log(dXdY);
 }
 
+bb.render = function(c,ctx){
+	ctx.clearRect(0,0,c.width,c.height);
+	bb.drawCourt(c,ctx);
+	if(bb.possession!=='player'){
+		bb.drawBall(c,ctx,bb.ballPos.x,bb.ballPos.y);
+	}
+	bb.drawPlayer(c,ctx,bb.playerPos.x,bb.playerPos.y);
+}
 
 
 
@@ -354,23 +287,26 @@ $(document).ready(function(){
 	bb.matchRatio();
 	var c = document.getElementById('court');
 	var ctx = c.getContext('2d');
-	bb.render(c,ctx);
-
-	var target = bb.getTarget();
-
+	var tar;
 
 	var rendering = setInterval(function(){
-		if(bb.possession!=='player' && bb.possession !== 'inPos'&& bb.possession !=='shooting'){
-			bb.getBall();
-			target = bb.getTarget();
-		} else if(bb.possession !== 'inPos' && bb.possession !=='shooting') {
-			bb.offensive(target.x,target.y);
-		} else if(bb.possession === 'inPos'){
-			bb.possession = 'shooting';
-		} else if(bb.possession === 'shooting'){
-			console.log(bb.ballPos);
-			bb.shoot();
+		if(bb.possession === 'loose'){
+			var t = bb.ballPos;
+			if(bb.movePlayer(t.x,t.y)){
+				bb.possession = 'player';
+				tar = bb.getRandom();
+			}
+		} else if (bb.possession === 'player'){
+			if(bb.movePlayer(tar.x,tar.y)){
+				bb.possession = 'ready';
+			}
+		} else if (bb.possession = 'ready') {
+			var t = bb.hoopPos;
+			if(bb.moveBall(t.x,t.y)){
+				bb.possession = 'loose';
+			}
 		}
+		
 		bb.render(c,ctx);
 	},30)
 
