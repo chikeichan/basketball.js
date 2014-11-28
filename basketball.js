@@ -1,9 +1,11 @@
 var bb = {};
-bb.draw = draw;
-bb.player = player;
-bb.action = action;
-bb.game = game;
+		bb.draw = draw;
+		bb.player = player;
+		bb.action = action;
+		bb.game = game;
 
+
+//Define home team
 bb.home = {
 	pg: {}
 }
@@ -13,11 +15,12 @@ bb.home.pg.pos = {x:40,y:25}
 
 bb.homeHoop = {x:5,y:25}
 
-bb.possession = 'loose';
+
 
 bb.ball = {
 	pos: {x:25,y:25},
-	inHand: false
+	inHand: false,
+	status: 'loose'
 }
 
 
@@ -27,10 +30,11 @@ $(document).ready(function(){
 	var c = document.getElementById('court');
 	var ctx = c.getContext('2d');
 	bb.draw.rationalize(8.2);
-	bb.draw.render(c,ctx,bb.home,bb.ball.pos);
+	//bb.draw.render(c,ctx,bb.home,bb.ball.pos);
+
 
 	var homepgAI = setInterval(function(){
-		bb.game.ai(bb.home.pg);
+		bb.game.ai(bb.home.pg,bb.homeHoop);
 	},30);
 
 	var ballAI = setInterval(function(){

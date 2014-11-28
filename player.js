@@ -18,7 +18,8 @@ player.newPlayer = function(name,dob,height,weight){
 		midPercent: 50,
 		longPercent: 35,
 		pos: {x:0,y:0},
-		hasBall: false
+		hasBall: false,
+		directive: 'getBall'
 	}
 }
 

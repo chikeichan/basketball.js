@@ -1,99 +1,6 @@
 var action = {};
 
-action.getBall = function(player){
-	var t = bb.ball.pos;
-	if(bb.action.movePlayer(player,t.x,t.y)){
-		bb.possession = 'inHand';
-		bb.ball.inHand = true;
-		bb.action.shootResult = false;
-		bb.action.shootTarget = false;
-	}
-}
-
-action.getOpenTarget = false;
-action.getOpen = function(player,withBall){
-	if(!action.getOpenTarget) {
-		action.getOpenTarget = action.getRandom();
-	}
-	if(withBall){
-		var t = action.getOpenTarget;
-		if(bb.action.movePlayer(player,t.x,t.y)){
-			bb.possession = 'inPosition';
-			action.getOpenTarget = false;
-		}
-	}
-}
-
-action.getRandom = function(mode){
-	var tX = Math.floor((Math.random()*25)+4);
-	var tY = Math.floor((Math.random()*50));
-
-	if(mode === 'missed'){
-		tX = Math.floor((Math.random()*2)+5);
-		tY = Math.floor((Math.random()*2)+24);
-	} else if(mode === 'rebound'){
-		tX = Math.floor((Math.random()*18)+5);
-		tY = Math.floor((Math.random()*16)+17);
-	}
-
-	return {x: tX, y: tY};
-}
-
-action.shootResult = false;
-action.shootTarget = false;
-action.shoot = function(player,hoop){
-	player.hasBall = false;
-	bb.ball.inHand = false;
-	if(!action.shootResult && action.shootResult !== 'rebound'){
-		action.shootTarget = action.getShootingResult(player,hoop);
-	}
-
-	if(action.shootResult === 'scored') {
-		if(action.moveBall(action.shootTarget.x,action.shootTarget.y,player.shootSpeed)){
-			bb.possession = 'loose';
-			action.shootResult = false;
-			action.shootTarget = false;
-		}
-	} else if(action.shootResult === 'missed') {
-		if(action.moveBall(action.shootTarget.x,action.shootTarget.y,player.shootSpeed)){
-			bb.possession = ['rebound',player,hoop];
-			action.shootResult = 'rebound';
-			action.shootTarget = action.getRandom('rebound');
-		}
-	} else if(action.shootResult === 'rebound') {
-		if(action.moveBall(action.shootTarget.x,action.shootTarget.y,player.shootSpeed*0.7)){
-			bb.possession = 'loose';
-			action.shootResult = false;
-			action.shootTarget = false;
-		}
-	}
-}
-
-action.getShootingResult = function(player,hoop){
-	var dX = hoop.x - bb.ball.pos.x;
-	var dY = hoop.y - bb.ball.pos.y;
-	var dC = Math.sqrt(dX*dX+dY*dY);
-	console.log(dC)
-
-	var percent = player.closePercent;
-
-	if(dC > 9) {
-		percent = player.midPercent;
-	} else if (dC > 15) {
-		percent = player.longPercent;
-	}
-
-	var result = Math.floor((Math.random()*100)+1);
-	if(result>percent){
-		action.shootResult = 'missed';
-		return action.getRandom('missed',hoop);
-	} else {
-		action.shootResult = 'scored';
-		return hoop;
-	}
-}
-
-
+//Basic movements
 action.movePlayer = function(player,tX,tY){
 	var dX = tX - player.pos.x;
 	var dY = tY - player.pos.y;
@@ -130,6 +37,7 @@ action.movePlayer = function(player,tX,tY){
 			y: player.pos.y
 		}
 		player.hasBall = true;
+		bb.ball.status = 'held';
 		return true;
 	}
 
@@ -174,3 +82,112 @@ action.moveBall = function(x,y,speed){
 		return true;
 	}
 }
+
+
+//Basic Command
+action.getBall = function(player,directive){
+	var t = bb.ball.pos;
+	if(bb.action.movePlayer(player,t.x,t.y)){
+		player.directive = directive;
+		bb.ball.inHand = true;
+		bb.action.shootResult = false;
+		bb.action.shootTarget = false;
+	}
+}
+
+action.getOpenTarget = false;
+action.getOpen = function(player,withBall,directive){
+	if(!action.getOpenTarget) {
+		action.getOpenTarget = action.getRandom();
+	}
+	if(withBall){
+		var t = action.getOpenTarget;
+		if(bb.action.movePlayer(player,t.x,t.y)){
+			player.directive = directive;
+			action.getOpenTarget = false;
+		}
+	}
+}
+
+
+action.shootResult = false;
+action.shootTarget = false;
+action.shootPlayer = false;
+action.shoot = function(player,hoop){
+	player.hasBall = false;
+	bb.ball.inHand = false;
+	if(!action.shootResult && action.shootResult !== 'rebound'){
+		action.shootTarget = action.getShootingResult(player,hoop);
+		action.shootPlayer = player;
+	}
+	bb.ball.status = 'shoot';
+}
+
+
+//Ball Motion
+action.ball = {};
+action.ball.shoot = function(){
+	if(action.shootResult === 'scored') {
+		if(action.moveBall(action.shootTarget.x,action.shootTarget.y,action.shootPlayer.shootSpeed)){
+			bb.ball.status = 'loose';
+			action.shootResult = false;
+			action.shootTarget = false;
+			action.shootPlayer = false;
+		}
+	} else if(action.shootResult === 'missed') {
+		if(action.moveBall(action.shootTarget.x,action.shootTarget.y,action.shootPlayer.shootSpeed)){
+			bb.ball.status = 'rebound';
+			action.shootResult = 'rebound';
+			action.shootTarget = action.getRandom('rebound');
+		}
+	} else if(action.shootResult === 'rebound') {
+		if(action.moveBall(action.shootTarget.x,action.shootTarget.y,action.shootPlayer.shootSpeed*0.7)){
+			bb.ball.status = 'loose';
+			action.shootResult = false;
+			action.shootTarget = false;
+			action.shootPlayer = false;
+		}
+	}
+}
+
+
+//Random Digit Generator
+action.getRandom = function(mode,hoop){
+	var tX = Math.floor((Math.random()*25)+4);
+	var tY = Math.floor((Math.random()*50));
+
+	if(mode === 'missed'){
+		tX = Math.floor((Math.random()*2)+hoop.x);
+		tY = Math.floor((Math.random()*2)+24);
+	} else if(mode === 'rebound'){
+		tX = Math.floor((Math.random()*18)+5);
+		tY = Math.floor((Math.random()*16)+17);
+	}
+
+	return {x: tX, y: tY};
+}
+
+action.getShootingResult = function(player,hoop){
+	var dX = hoop.x - bb.ball.pos.x;
+	var dY = hoop.y - bb.ball.pos.y;
+	var dC = Math.sqrt(dX*dX+dY*dY);
+	console.log(dC)
+
+	var percent = player.closePercent;
+
+	if(dC > 9) {
+		percent = player.midPercent;
+	} else if (dC > 15) {
+		percent = player.longPercent;
+	}
+
+	var result = Math.floor((Math.random()*100)+1);
+	if(result>percent){
+		action.shootResult = 'missed';
+		return action.getRandom('missed',hoop);
+	} else {
+		action.shootResult = 'scored';
+		return hoop;
+	}
+}
+
