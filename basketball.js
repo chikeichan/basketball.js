@@ -12,17 +12,28 @@ bb.home = {
 
 bb.home.pg = bb.player.list[0];
 bb.home.pg.pos = {x:40,y:25}
+bb.home.pg.side = 'home';
 
 bb.homeHoop = {x:5,y:25}
+bb.awayHoop = {x:5,y:25}
 
 
 
 bb.ball = {
 	pos: {x:25,y:25},
 	inHand: false,
-	status: 'loose'
+	status: 'loose',
+	ownBy: null
 }
 
+//Define home team
+bb.away = {
+	pg: {}
+}
+
+bb.away.pg = bb.player.list[1];
+bb.away.pg.pos = {x:40,y:45};
+bb.away.pg.side = 'away';
 
 
 //Rendering Script
@@ -35,6 +46,7 @@ $(document).ready(function(){
 
 	var homepgAI = setInterval(function(){
 		bb.game.ai(bb.home.pg,bb.homeHoop);
+		bb.game.ai(bb.away.pg,bb.awayHoop);
 	},30);
 
 	var ballAI = setInterval(function(){
@@ -42,6 +54,6 @@ $(document).ready(function(){
 	},30);
 
 	var rendering = setInterval(function(){
-		bb.draw.render(c,ctx,bb.home,bb.ball.pos);
+		bb.draw.render(c,ctx,bb.ball.pos);
 	},30);
 })

@@ -151,9 +151,9 @@ draw.drawBall = function(canvas,context,x,y){
 }
 
 //render player
-draw.drawPlayer = function(canvas,context,player){
+draw.drawPlayer = function(canvas,context,player,color){
 	context.translate((canvas.width-draw.data.width)/2,(canvas.height-draw.data.height)/2);
-	context.fillStyle = 'blue';
+	context.fillStyle = color;
 
 	context.beginPath();
 	context.lineWidth=0;
@@ -170,11 +170,15 @@ draw.drawPlayer = function(canvas,context,player){
 	context.translate(-(canvas.width-draw.data.width)/2,-(canvas.height-draw.data.height)/2);
 }
 
-draw.render = function(c,ctx,players,ballPos){
+draw.render = function(c,ctx,ballPos){
 	ctx.clearRect(0,0,c.width,c.height);
 	draw.drawCourt(c,ctx);
-	_.each(players,function(player){
-		draw.drawPlayer(c,ctx,player);
+	_.each(bb.home,function(player){
+		draw.drawPlayer(c,ctx,player,'blue');
+	})
+
+	_.each(bb.away,function(player){
+		draw.drawPlayer(c,ctx,player,'red');
 	})
 
 	if(!bb.ball.inHand){

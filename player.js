@@ -30,3 +30,7 @@ player.nextNumber = function(){
 
 var temp = new player.newPlayer('Jacky','02/25/1986',72, 180);
 player.list.push(temp);
+
+var temp = new player.newPlayer('Chun','06/02/1998',76, 160);
+temp.fullSpeed = 0.8;
+player.list.push(temp);
