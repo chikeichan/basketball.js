@@ -15,7 +15,13 @@ game.ai = function(player,hoop){
 		side = 'neutral';
 		player.directive = 'getBall';
 	} else if(bb.ball.status === 'shoot') {
-		side = 'neutral';
+		if(bb.action.shootPlayer.side !== player.side){
+			side = 'defense';
+			player.directive = 'boxOut';
+		} else {
+			side = 'offense';
+			player.directive = 'boxOut';
+		}
 		player.directive = 'boxOut';
 	} else if(bb.ball.status === player.side) {
 		side = 'offense';
@@ -29,14 +35,20 @@ game.ai = function(player,hoop){
 			bb.action.getOpen(player,true,'shoot',hoop);
 		} else if(player.directive === 'shoot'){
 			bb.action.shoot(player,hoop);
+		} else if(player.directive === 'boxOut'){
+			setTimeout(function(){
+				bb.action.boxOut(player,hoop);
+			},500);
 		}
 	} else if(side==='neutral'){
-		if(player.directive === 'getBall' || player.directive === 'getRebound'){
+		if(player.directive === 'getBall'){
 			bb.action.getBall(player,'getOpen');
 		}
 	} else if (side === 'defense'){
 		if(player.directive === 'defense'){
 			bb.action.defend(player,bb.ball.ownBy,otherHoop);
+		} else if(player.directive === 'boxOut'){
+			bb.action.boxOut(player,hoop)
 		}
 	}
 }

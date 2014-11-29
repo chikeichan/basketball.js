@@ -21,12 +21,12 @@ action.movePlayer = function(player,tX,tY){
 		player.pos.y = player.pos.y + dYdt;
 	}
 
-	if(dX < player.speed && dX > -player.speed){
-		playerPos.x = tX;
+	if(dX < dXdt && dX > -dXdt){
+		player.pos.x = tX;
 	}
 
-	if(dY < player.speed && dY > -player.speed){
-		playerPos.y = tY;
+	if(dY < dYdt && dY > -dYdt){
+		player.pos.y = tY;
 	}
 
 	if(player.hasBall){
@@ -35,7 +35,6 @@ action.movePlayer = function(player,tX,tY){
 			y: player.pos.y
 		}
 	}
-	
 
 	if(Math.abs(dX) < 1 && Math.abs(dY) < 1){
 		return true;
@@ -73,6 +72,7 @@ action.moveBall = function(x,y,speed){
 		bb.ball.pos.y = y;
 	}
 
+
 	if(dX === 0 && dY === 0){
 		return true;
 	}
@@ -90,6 +90,7 @@ action.getBall = function(player,directive){
 		bb.ball.ownBy = player;
 		bb.action.shootResult = false;
 		bb.action.shootTarget = false;
+		bb.action.boxOutTarget[player.id] = false;
 	}
 }
 
@@ -120,7 +121,7 @@ action.shoot = function(player,hoop){
 	}
 	setTimeout(function(){
 		bb.ball.status = 'shoot';
-	},100)
+	},150)
 }
 
 //Defense
@@ -145,6 +146,15 @@ action.defend = function(player,match,hoop){
 	}
 
 	action.movePlayer(player,t.x,t.y);
+}
+
+action.boxOutTarget = {};
+action.boxOut = function(player){
+	if(!action.boxOutTarget[player.id]){
+		action.boxOutTarget[player.id] = action.getRandom('boxOut',action.shootTarget);
+	}
+
+	action.movePlayer(player,action.boxOutTarget[player.id].x,action.boxOutTarget[player.id].y);
 }
 
 
@@ -194,6 +204,9 @@ action.getRandom = function(mode,hoop){
 	} else if(mode === 'rebound'){
 		tX = Math.abs(Math.floor(hoop.x-(Math.random()*18)));
 		tY = Math.floor((Math.random()*16)+17);
+	} else if(mode === 'boxOut'){
+		tX = Math.floor((Math.random()*8)+5);
+		tY = Math.floor((Math.random()*8)+25);
 	}
 
 	return {x: tX, y: tY};
